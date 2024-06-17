@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import axios from "axios";
 import { useNavigation } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const LoginScreen = () => {
   const navigation = useNavigation();
@@ -21,32 +22,25 @@ const LoginScreen = () => {
         email: email,
         password: password,
       });
-      console.log(response.data); // Log the response data (token)
-      // Optionally, handle login success (e.g., store token in AsyncStorage)
+      const { token, user } = response.data;
+      await AsyncStorage.setItem("authToken", token);
+      await AsyncStorage.setItem("userName", user.name);
+      navigation.navigate("Home");
     } catch (error) {
       console.error("Error logging in:", error);
       if (error.response) {
-        // The request was made and the server responded with a status code
-        console.error("Status:", error.response.status);
-        console.error("Data:", error.response.data); // Log the error response data
-        // Handle specific error messages from Laravel validation or other errors
         if (error.response.status === 422) {
-          // Example: handle validation errors from Laravel
           const firstErrorKey = Object.keys(error.response.data.errors)[0];
           Alert.alert("Error", error.response.data.errors[firstErrorKey][0]);
         } else {
           Alert.alert("Error", "Failed to login. Please try again.");
         }
       } else if (error.request) {
-        // The request was made but no response was received
-        console.error("Request made but no response received:", error.request);
         Alert.alert(
           "Error",
           "No response from server. Please try again later."
         );
       } else {
-        // Something happened in setting up the request that triggered an error
-        console.error("Error:", error.message);
         Alert.alert(
           "Error",
           "Network request failed. Please check your internet connection."
@@ -60,7 +54,7 @@ const LoginScreen = () => {
       <Text style={styles.title}>Login</Text>
       <TextInput
         style={styles.input}
-        placeholder="Username or Email"
+        placeholder="Email"
         autoCapitalize="none"
         value={email}
         onChangeText={setEmail}

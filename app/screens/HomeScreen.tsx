@@ -1,40 +1,65 @@
-// screens/HomeScreen.tsx
+import React, { useState, useEffect } from "react";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import React from "react";
-import { Image, StyleSheet, Platform, TouchableOpacity } from "react-native";
-import ParallaxScrollView from "@/components/ParallaxScrollView";
-import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
+const HomeScreen = () => {
+  const navigation = useNavigation();
+  const [userName, setUserName] = useState("");
 
-const HomeScreen = ({ navigation }) => {
+  useEffect(() => {
+    const fetchUserName = async () => {
+      const name = await AsyncStorage.getItem("userName");
+      setUserName(name);
+    };
+
+    fetchUserName();
+  }, []);
+
+  const handleLogout = async () => {
+    await AsyncStorage.removeItem("authToken");
+    await AsyncStorage.removeItem("userName");
+    navigation.reset({
+      index: 0,
+      routes: [{ name: "Login" }],
+    });
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
-      headerImage={
-        <Image
-          source={require("@/assets/images/partial-react-logo.png")}
-          style={styles.reactLogo}
-        />
-      }
-    >
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-      </ThemedView>
-      {/* Other content here */}
-      <TouchableOpacity onPress={() => navigation.navigate("Login")}>
-        <ThemedText type="subtitle">Go to Login</ThemedText>
+    <View style={styles.container}>
+      <Text style={styles.title}>Home</Text>
+      <Text>Welcome to the home page, {userName}!</Text>
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <Text style={styles.buttonText}>Logout</Text>
       </TouchableOpacity>
-    </ParallaxScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: "row",
+  container: {
+    flex: 1,
+    justifyContent: "center",
     alignItems: "center",
-    gap: 8,
+    padding: 20,
   },
-  // Other styles
+  title: {
+    fontSize: 24,
+    marginBottom: 20,
+  },
+  logoutButton: {
+    width: "100%",
+    height: 50,
+    backgroundColor: "#e74c3c",
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 8,
+    marginTop: 10,
+  },
+  buttonText: {
+    fontSize: 18,
+    color: "#fff",
+  },
 });
 
 export default HomeScreen;
